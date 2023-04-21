@@ -276,6 +276,9 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             # i.e. we go from RGBRGBRGBRGBRGB to RRRRRGGGGGBBBBB
             data = np.moveaxis(data, 2, 0)
 
+        if self._auto_exposure:
+            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0]
+
         # create FITS image and set header
         image = Image(data)
         image.header["DATE-OBS"] = (date_obs, "Date and time of start of exposure")
