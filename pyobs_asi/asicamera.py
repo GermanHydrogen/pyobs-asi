@@ -161,23 +161,26 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         else:
             return []
 
-    async def set_exposure_time(self, exposure_time: float, auto_exposure: bool = False, **kwargs: Any) -> None:
+    async def set_exposure_time(self, exposure_time: float, **kwargs: Any) -> None:
         """Set the exposure time in seconds.
 
         Args:
             exposure_time: Exposure time in seconds.
-            auto_exposure: If exposure time should be controlled by the camera
 
         Raises:
             ValueError: If exposure time could not be set.
         """
-        log.info("Setting exposure time to %.5fs...", exposure_time)
-        self._exposure_time = exposure_time
-        if auto_exposure:
-            if not self._enable_auto_exposure:
-                raise ValueError("Auto Exposure is not enabled!")
 
-            self._auto_exposure = auto_exposure
+        if exposure_time == -1:
+            if not self._enable_auto_exposure:
+                raise ValueError("For this camera it is not allowed to use auto exposure!")
+
+            log.info("Enabled auto exposure...")
+            self._auto_exposure = True
+        else:
+            log.info("Setting exposure time to %.5fs...", exposure_time)
+            self._exposure_time = exposure_time
+            self._auto_exposure = False
 
     async def _expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> Image:
         """Actually do the exposure, should be implemented by derived classes.
