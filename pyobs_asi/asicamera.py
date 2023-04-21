@@ -30,7 +30,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
     __module__ = "pyobs_asi"
 
-    def __init__(self, camera: str, sdk: str = "/usr/local/lib/libASICamera2.so", **kwargs: Any):
+    def __init__(self, camera: str, sdk: str = "/usr/local/lib/libASICamera2.so", enable_auto_exposure:bool = False, **kwargs: Any):
         """Initializes a new AsiCamera.
 
         Args:
@@ -49,6 +49,9 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._window = (0, 0, 0, 0)
         self._binning = 1
         self._image_format = ImageFormat.INT16
+
+        self._enable_auto_exposure = enable_auto_exposure
+        self._auto_exposure = False
 
     async def open(self) -> None:
         """Open module."""
@@ -158,6 +161,24 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         else:
             return []
 
+    async def set_exposure_time(self, exposure_time: float, auto_exposure: bool = False, **kwargs: Any) -> None:
+        """Set the exposure time in seconds.
+
+        Args:
+            exposure_time: Exposure time in seconds.
+            auto_exposure: If exposure time should be controlled by the camera
+
+        Raises:
+            ValueError: If exposure time could not be set.
+        """
+        log.info("Setting exposure time to %.5fs...", exposure_time)
+        self._exposure_time = exposure_time
+        if auto_exposure:
+            if not self._enable_auto_exposure:
+                raise ValueError("Auto Exposure is not enabled!")
+
+            self._auto_exposure = auto_exposure
+
     async def _expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> Image:
         """Actually do the exposure, should be implemented by derived classes.
 
@@ -197,7 +218,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_roi(int(self._window[0]), int(self._window[1]), width, height, self._binning, image_format)
 
         # set status and exposure time in ms
-        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6))
+        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), self._auto_exposure)
 
         # get date obs
         log.info(
