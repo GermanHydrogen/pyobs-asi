@@ -364,7 +364,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         Raises:
             ValueError: If gain could not be set.
         """
-        self._camera.set_control_value(asi.ASI_GAIN, gain)
+        self._camera.set_control_value(asi.ASI_GAIN, int(gain))
 
     async def get_gain(self, **kwargs: Any) -> float:
         """Returns the camera gain.
