@@ -182,6 +182,8 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             self._exposure_time = exposure_time
             self._auto_exposure = False
 
+        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), self._auto_exposure)
+
     async def _expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> Image:
         """Actually do the exposure, should be implemented by derived classes.
 
@@ -221,7 +223,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_roi(int(self._window[0]), int(self._window[1]), width, height, self._binning, image_format)
 
         # set status and exposure time in ms
-        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), self._auto_exposure)
+        #self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), self._auto_exposure)
 
         # get date obs
         log.info(
@@ -280,7 +282,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             data = np.moveaxis(data, 2, 0)
 
         if self._auto_exposure:
-            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0]
+            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0] * 1e-6
 
         # create FITS image and set header
         image = Image(data)
