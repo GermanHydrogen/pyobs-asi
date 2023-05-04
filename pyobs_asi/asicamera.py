@@ -7,7 +7,7 @@ from typing import List, Tuple, Any, Dict, Optional
 import numpy as np
 import zwoasi as asi  # type: ignore
 
-from pyobs.interfaces import ICamera, IWindow, IBinning, ICooling, IImageFormat, IAbortable
+from pyobs.interfaces import ICamera, IWindow, IBinning, ICooling, IImageFormat, IAbortable, IGain
 from pyobs.modules.camera.basecamera import BaseCamera
 from pyobs.utils.enums import ImageFormat, ExposureStatus
 from pyobs.images import Image
@@ -25,7 +25,7 @@ FORMATS = {
 }
 
 
-class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable):
+class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable, IGain):
     """A pyobs module for ASI cameras."""
 
     __module__ = "pyobs_asi"
@@ -305,7 +305,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         # pixels
         image.header["DET-PIXL"] = (self._camera_info["PixelSize"] / 1000.0, "Size of detector pixels (square) [mm]")
-        image.header["DET-GAIN"] = (self._camera_info["ElecPerADU"], "Detector gain [e-/ADU]")
+        image.header["DET-GAIN"] = (self._camera_info["ElecPerADU"], "Detector gain [e-/ADU]")  # TODO: Read from camera
 
         # Bayer pattern?
         if image_format in [asi.ASI_IMG_RAW8, asi.ASI_IMG_RAW16]:
@@ -354,6 +354,25 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             List of available image formats.
         """
         return [f.value for f in FORMATS.keys()]
+
+    async def set_gain(self, gain: float, **kwargs: Any) -> None:
+        """Set the camera gain.
+
+        Args:
+            gain: New camera gain.
+
+        Raises:
+            ValueError: If gain could not be set.
+        """
+        self._camera.set_control_value(asi.ASI_GAIN, gain)
+
+    async def get_gain(self, **kwargs: Any) -> float:
+        """Returns the camera gain.
+
+        Returns:
+            Current gain.
+        """
+        return self._camera.get_control_value(asi.ASI_GAIN)[0]
 
 
 class AsiCoolCamera(AsiCamera, ICooling):
