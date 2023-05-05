@@ -374,7 +374,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         Returns:
             Current gain.
         """
-        return self._camera.get_control_value(asi.ASI_GAIN)[0]
+        return float(self._camera.get_control_value(asi.ASI_GAIN)[0])
 
 
 class AsiCoolCamera(AsiCamera, ICooling):
