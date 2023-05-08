@@ -99,7 +99,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(16 * 1e3))
         self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, 50)
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_BRIGHTNESS, 100)
+        self._camera.set_control_value(asi.ASI_AUTO_MAX_BRIGHTNESS, 50)
 
         # enabling image mode
         self._camera.stop_video_capture()
@@ -296,10 +296,12 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             data = np.moveaxis(data, 2, 0)
 
         if self._auto_exposure:
-            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0] * 1e-6
-            gain = self._camera.get_control_value(asi.ASI_GAIN)[0]
+            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)
+            gain = self._camera.get_control_value(asi.ASI_GAIN)
 
             log.info(f"Exposed with {exposure_time}s exposure time and {gain} gain...")
+
+            exposure_time = exposure_time[0]
 
         # create FITS image and set header
         image = Image(data)
