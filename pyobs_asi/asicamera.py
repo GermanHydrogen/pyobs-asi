@@ -246,9 +246,14 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         date_obs = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
 
         # do exposure
-        self._camera.start_exposure()
+        #self._camera.start_exposure()
+
+        self._camera.start_video_capture()
         await asyncio.sleep(0.01)
 
+
+
+        '''
         # wait for image
         while self._camera.get_exposure_status() == asi.ASI_EXP_WORKING:
             # aborted?
@@ -258,16 +263,20 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
             # sleep a little
             await event_wait(abort_event, 0.01)
+        '''
+
 
         # success?
-        status = self._camera.get_exposure_status()
-        if status != asi.ASI_EXP_SUCCESS:
-            raise exc.GrabImageError("Could not capture image: %s" % status)
+        #status = self._camera.get_exposure_status()
+        #if status != asi.ASI_EXP_SUCCESS:
+        #    raise exc.GrabImageError("Could not capture image: %s" % status)
 
         # get data
         log.info("Exposure finished, reading out...")
         await self._change_exposure_status(ExposureStatus.READOUT)
-        buffer = self._camera.get_data_after_exposure()
+        #buffer = self._camera.get_data_after_exposure()
+        buffer = self._camera.get_video_data(timeout=int(2 * self._exposure_time * 1e3 + 5000))
+        self._camera.stop_video_capture()
         whbi = self._camera.get_roi_format()
 
         # decide on image format
