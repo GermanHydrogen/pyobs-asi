@@ -241,7 +241,6 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             "Starting exposure with %s shutter for %.2f seconds and %d gain...", "open"
             if open_shutter else "closed", exposure_time, self._gain
         )
-        date_obs = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
 
         # do exposure
         self._camera.start_exposure()
