@@ -52,6 +52,9 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         self._enable_auto_exposure = enable_auto_exposure
         self._auto_exposure = False
+        self._auto_gain = False
+
+        self._gain = 0
 
     async def open(self) -> None:
         """Open module."""
@@ -231,6 +234,9 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         # set status and exposure time in ms
         self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), self._auto_exposure)
 
+        # set gain
+        self._camera.set_control_value(asi.ASI_GAIN, int(self._gain), self._auto_exposure)
+
         # get date obs
         log.info(
             "Starting exposure with %s shutter for %.2f seconds...", "open" if open_shutter else "closed", exposure_time
@@ -289,6 +295,9 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         if self._auto_exposure:
             exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0] * 1e-6
+            gain = self._camera.get_control_value(asi.ASI_GAIN)[0]
+
+            log.info(f"Exposed with {exposure_time}s exposure time and {gain} gain...")
 
         # create FITS image and set header
         image = Image(data)
@@ -372,7 +381,8 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         Raises:
             ValueError: If gain could not be set.
         """
-        self._camera.set_control_value(asi.ASI_GAIN, int(gain))
+        self._gain = gain
+
 
     async def get_gain(self, **kwargs: Any) -> float:
         """Returns the camera gain.
@@ -380,7 +390,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         Returns:
             Current gain.
         """
-        return float(self._camera.get_control_value(asi.ASI_GAIN)[0])
+        return self._gain
 
 
 class AsiCoolCamera(AsiCamera, ICooling):
