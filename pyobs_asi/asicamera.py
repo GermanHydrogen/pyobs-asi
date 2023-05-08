@@ -97,8 +97,8 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_control_value(asi.ASI_FLIP, 0)
         self._camera.set_image_type(asi.ASI_IMG_RAW16)
 
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(16 * 1e3))
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, 50)
+        self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(0.5 * 1e3))
+        self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, 10)
         self._camera.set_control_value(asi.ASI_AUTO_MAX_BRIGHTNESS, 50)
 
         # enabling image mode
