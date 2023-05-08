@@ -237,7 +237,15 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), self._auto_exposure)
 
         # set gain
-        self._camera.set_control_value(asi.ASI_GAIN, int(self._gain), self._auto_exposure)
+        self._camera.set_control_value(asi.ASI_GAIN, int(self._gain), False)
+
+        if self._auto_exposure:
+            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)
+            gain = self._camera.get_control_value(asi.ASI_GAIN)
+
+            log.info(f"Exposed with {exposure_time}s exposure time and {gain} gain...")
+
+            exposure_time = exposure_time[0]
 
         # get date obs
         log.info(
@@ -303,14 +311,6 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             # this is easiest done by shifting the RGB axis from last to first position
             # i.e. we go from RGBRGBRGBRGBRGB to RRRRRGGGGGBBBBB
             data = np.moveaxis(data, 2, 0)
-
-        if self._auto_exposure:
-            exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)
-            gain = self._camera.get_control_value(asi.ASI_GAIN)
-
-            log.info(f"Exposed with {exposure_time}s exposure time and {gain} gain...")
-
-            exposure_time = exposure_time[0]
 
         # create FITS image and set header
         image = Image(data)
