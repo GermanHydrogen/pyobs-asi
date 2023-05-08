@@ -198,7 +198,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
     async def _auto_expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> (bytearray, float, int):
 
         # Set the current values as maxima
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(exposure_time * 1e6))
+        self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(exposure_time * 1e3))
         self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, int(self._gain))
 
         # set status and exposure time in ms
