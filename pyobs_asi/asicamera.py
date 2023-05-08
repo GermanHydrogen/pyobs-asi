@@ -212,7 +212,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         # get date obs
         log.info(
-            "Starting exposure with %s shutter for %.2f seconds and %d gain...", "open"
+            "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
             if open_shutter else "closed", exposure_time, gain
         )
 
@@ -238,7 +238,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         # get date obs
         log.info(
-            "Starting exposure with %s shutter for %.2f seconds and %d gain...", "open"
+            "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
             if open_shutter else "closed", exposure_time, self._gain
         )
 
