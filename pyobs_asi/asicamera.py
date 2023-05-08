@@ -307,9 +307,9 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_roi(int(self._window[0]), int(self._window[1]), width, height, self._binning, image_format)
 
         if self._auto_exposure:
-            buffer, exposure_time, gain = self._auto_expose(exposure_time, open_shutter, abort_event)
+            buffer, exposure_time, gain = await self._auto_expose(exposure_time, open_shutter, abort_event)
         else:
-            buffer, exposure_time, gain = self._snap_expose(exposure_time, open_shutter, abort_event)
+            buffer, exposure_time, gain = await self._snap_expose(exposure_time, open_shutter, abort_event)
 
         whbi = self._camera.get_roi_format()
 
