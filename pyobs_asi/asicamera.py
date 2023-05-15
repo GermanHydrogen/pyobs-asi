@@ -266,6 +266,8 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         await self._change_exposure_status(ExposureStatus.READOUT)
         buffer = self._camera.get_data_after_exposure()
 
+        exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0] * 1e-6
+
         return buffer, exposure_time, self._gain
 
     async def _expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> Image:
@@ -423,7 +425,6 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             ValueError: If gain could not be set.
         """
         self._gain = gain
-
 
     async def get_gain(self, **kwargs: Any) -> float:
         """Returns the camera gain.
