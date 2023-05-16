@@ -50,11 +50,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._binning = 1
         self._image_format = ImageFormat.INT16
 
-        self._enable_auto_exposure = enable_auto_exposure
-        self._auto_exposure = False
-        self._auto_gain = False
-
-        self._gain = 0
+        self._gain: float = 0.0
 
     async def open(self) -> None:
         """Open module."""
@@ -79,12 +75,6 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         log.info("Camera info:")
         for key, val in self._camera_info.items():
             log.info("  - %s: %s", key, val)
-
-        controls = self._camera.get_controls()
-        log.info(str(controls))
-
-        modes = self._camera.get_camera_support_mode()
-        log.info(str(modes))
 
         # Set some sensible defaults. They will need adjusting depending upon
         # the sensitivity, lens and lighting conditions used.
@@ -174,102 +164,6 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         else:
             return []
 
-    async def set_exposure_time(self, exposure_time: float, **kwargs: Any) -> None:
-        """Set the exposure time in seconds.
-
-        Args:
-            exposure_time: Exposure time in seconds.
-
-        Raises:
-            ValueError: If exposure time could not be set.
-        """
-
-        if exposure_time == -1:
-            if not self._enable_auto_exposure:
-                raise ValueError("For this camera it is not allowed to use auto exposure!")
-
-            log.info("Enabled auto exposure...")
-            self._auto_exposure = True
-        else:
-            log.info("Setting exposure time to %.5fs...", exposure_time)
-            self._exposure_time = exposure_time
-            self._auto_exposure = False
-
-    async def _auto_expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> (bytearray, float, int):
-
-        # Set the current values as maxima
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(exposure_time * 1e3))
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, int(self._gain))
-
-        # set status and exposure time in ms
-        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6), True)
-
-        # set gain
-        self._camera.set_control_value(asi.ASI_GAIN, int(self._gain), True)
-
-        exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0] * 1e-6
-        gain = self._camera.get_control_value(asi.ASI_GAIN)[0]
-
-        # get date obs
-        log.info(
-            "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
-            if open_shutter else "closed", exposure_time, gain
-        )
-
-        # Start Exposure
-        self._camera.start_video_capture()
-        await asyncio.sleep(0.01)
-
-        # get data
-        log.info("Exposure finished, reading out...")
-        await self._change_exposure_status(ExposureStatus.READOUT)
-        buffer = self._camera.get_video_data(timeout=int(2 * self._exposure_time * 1e3 + 5000))
-        self._camera.stop_video_capture()
-
-        return buffer, exposure_time, gain
-
-    async def _snap_expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> (bytearray, float, int):
-
-        # set status and exposure time in ms
-        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6))
-
-        # set gain
-        self._camera.set_control_value(asi.ASI_GAIN, int(self._gain))
-
-        # get date obs
-        log.info(
-            "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
-            if open_shutter else "closed", exposure_time, self._gain
-        )
-
-        # do exposure
-        self._camera.start_exposure()
-        await asyncio.sleep(0.01)
-
-        # wait for image
-        while self._camera.get_exposure_status() == asi.ASI_EXP_WORKING:
-            # aborted?
-            if abort_event.is_set():
-                await self._change_exposure_status(ExposureStatus.IDLE)
-                raise InterruptedError("Aborted exposure.")
-
-            # sleep a little
-            await event_wait(abort_event, 0.01)
-
-        # success?
-        status = self._camera.get_exposure_status()
-        if status != asi.ASI_EXP_SUCCESS:
-            raise exc.GrabImageError("Could not capture image: %s" % status)
-
-        # get data
-        log.info("Exposure finished, reading out...")
-        await self._change_exposure_status(ExposureStatus.READOUT)
-        buffer = self._camera.get_data_after_exposure()
-
-        exposure_time = self._camera.get_control_value(asi.ASI_EXPOSURE)[0] * 1e-6
-
-        return buffer, exposure_time, self._gain
-
     async def _expose(self, exposure_time: float, open_shutter: bool, abort_event: asyncio.Event) -> Image:
         """Actually do the exposure, should be implemented by derived classes.
 
@@ -308,10 +202,40 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         )
         self._camera.set_roi(int(self._window[0]), int(self._window[1]), width, height, self._binning, image_format)
 
-        if self._auto_exposure:
-            buffer, exposure_time, gain = await self._auto_expose(exposure_time, open_shutter, abort_event)
-        else:
-            buffer, exposure_time, gain = await self._snap_expose(exposure_time, open_shutter, abort_event)
+        # set status and exposure time in ms
+        self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6))
+
+        # set gain
+        self._camera.set_control_value(asi.ASI_GAIN, int(self._gain))
+
+        log.info(
+            "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
+            if open_shutter else "closed", exposure_time, self._gain
+        )
+
+        # do exposure
+        self._camera.start_exposure()
+        await asyncio.sleep(0.01)
+
+        # wait for image
+        while self._camera.get_exposure_status() == asi.ASI_EXP_WORKING:
+            # aborted?
+            if abort_event.is_set():
+                await self._change_exposure_status(ExposureStatus.IDLE)
+                raise InterruptedError("Aborted exposure.")
+
+            # sleep a little
+            await event_wait(abort_event, 0.01)
+
+        # success?
+        status = self._camera.get_exposure_status()
+        if status != asi.ASI_EXP_SUCCESS:
+            raise exc.GrabImageError("Could not capture image: %s" % status)
+
+        # get data
+        log.info("Exposure finished, reading out...")
+        await self._change_exposure_status(ExposureStatus.READOUT)
+        buffer = self._camera.get_data_after_exposure()
 
         whbi = self._camera.get_roi_format()
 
@@ -340,6 +264,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             # i.e. we go from RGBRGBRGBRGBRGB to RRRRRGGGGGBBBBB
             data = np.moveaxis(data, 2, 0)
 
+        # get date obs
         date_obs = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
 
         # create FITS image and set header
