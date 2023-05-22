@@ -272,7 +272,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         log.info(f"Gain: {self._camera.get_control_value(asi.ASI_GAIN)}")
         log.info(f"Gamma: {self._camera.get_control_value(asi.ASI_GAMMA)}")
         log.info(f"Brightness: {self._camera.get_control_value(asi.ASI_BRIGHTNESS)}")
-        log.info(f"Temperature: {self._camera.get_control_value(asi.ASI_TARGET_TEMP)}")
+        log.info(f"Temperature: {self._camera.get_control_value(asi.ASI_TEMPERATURE)}")
         log.info("---- Exposure Info END ----")
 
         # create FITS image and set header
