@@ -215,7 +215,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         # do exposure
         self._camera.start_exposure()
-        await asyncio.sleep(1e4)
+        await asyncio.sleep(1e-4)
 
         # wait for image
         while self._camera.get_exposure_status() == asi.ASI_EXP_WORKING:
@@ -225,7 +225,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
                 raise InterruptedError("Aborted exposure.")
 
             # sleep a little
-            await event_wait(abort_event, 1e4)
+            await event_wait(abort_event, 1e-4)
 
         # success?
         status = self._camera.get_exposure_status()
