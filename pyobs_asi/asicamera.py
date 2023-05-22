@@ -267,6 +267,14 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         # get date obs
         date_obs = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
 
+        log.info("---- Exposure Info START ----")
+        log.info(f"Exposure Time: {self._camera.get_control_value(asi.ASI_EXPOSURE)}")
+        log.info(f"Gain: {self._camera.get_control_value(asi.ASI_GAIN)}")
+        log.info(f"Gamma: {self._camera.get_control_value(asi.ASI_GAMMA)}")
+        log.info(f"Brightness: {self._camera.get_control_value(asi.ASI_BRIGHTNESS)}")
+        log.info(f"Temperature: {self._camera.get_control_value(asi.ASI_TARGET_TEMP)}")
+        log.info("---- Exposure Info END ----")
+
         # create FITS image and set header
         image = Image(data)
         image.header["DATE-OBS"] = (date_obs, "Date and time of start of exposure")
