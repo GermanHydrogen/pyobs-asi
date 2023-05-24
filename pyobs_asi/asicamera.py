@@ -83,13 +83,13 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_control_value(asi.ASI_WB_B, 99)
         self._camera.set_control_value(asi.ASI_WB_R, 75)
         self._camera.set_control_value(asi.ASI_GAMMA, 1)
-        self._camera.set_control_value(asi.ASI_BRIGHTNESS, 1)
+        self._camera.set_control_value(asi.ASI_BRIGHTNESS, 50)
         self._camera.set_control_value(asi.ASI_FLIP, 0)
         self._camera.set_image_type(asi.ASI_IMG_RAW16)
 
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(500))
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, 10)
-        self._camera.set_control_value(asi.ASI_AUTO_MAX_BRIGHTNESS, 50)
+        #self._camera.set_control_value(asi.ASI_AUTO_MAX_EXP, int(500))
+        #self._camera.set_control_value(asi.ASI_AUTO_MAX_GAIN, 10)
+        #self._camera.set_control_value(asi.ASI_AUTO_MAX_BRIGHTNESS, 50)
 
         # enabling image mode
         self._camera.stop_video_capture()
