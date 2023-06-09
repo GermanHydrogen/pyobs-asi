@@ -213,6 +213,16 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
             if open_shutter else "closed", exposure_time, self._gain
         )
 
+        self._camera.start_video_capture()
+        await asyncio.sleep(0.01)
+
+        # get data
+        log.info("Exposure finished, reading out...")
+        await self._change_exposure_status(ExposureStatus.READOUT)
+        buffer = self._camera.get_video_data(timeout=int(2 * self._exposure_time * 1e3 + 5000))
+        self._camera.stop_video_capture()
+
+        '''
         # do exposure
         self._camera.start_exposure()
         await asyncio.sleep(1e-4)
@@ -236,7 +246,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         log.info("Exposure finished, reading out...")
         await self._change_exposure_status(ExposureStatus.READOUT)
         buffer = self._camera.get_data_after_exposure()
-
+        '''
         whbi = self._camera.get_roi_format()
 
         # decide on image format
