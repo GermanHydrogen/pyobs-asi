@@ -362,7 +362,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         """
 
         if self._gain != gain:
-            self._camera.set_control_value(asi.ASI_GAIN, float(gain))
+            self._camera.set_control_value(asi.ASI_GAIN, int(gain))
             await asyncio.sleep(0.1)
 
         self._gain = gain
