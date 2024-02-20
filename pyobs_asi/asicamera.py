@@ -201,7 +201,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         self._camera.set_control_value(asi.ASI_EXPOSURE, int(exposure_time * 1e6))
 
         # set gain
-        self._camera.set_control_value(asi.ASI_GAIN, float(self._gain))
+        #self._camera.set_control_value(asi.ASI_GAIN, float(self._gain))
 
         log.info(
             "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
@@ -360,6 +360,11 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
         Raises:
             ValueError: If gain could not be set.
         """
+
+        if self._gain != gain:
+            self._camera.set_control_value(asi.ASI_GAIN, float(self._gain))
+            await asyncio.sleep(0.1)
+
         self._gain = gain
 
     async def get_gain(self, **kwargs: Any) -> float:
