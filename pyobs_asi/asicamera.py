@@ -205,7 +205,7 @@ class AsiCamera(BaseCamera, ICamera, IWindow, IBinning, IImageFormat, IAbortable
 
         log.info(
             "Starting exposure with %s shutter for %s seconds and %s gain...", "open"
-            if open_shutter else "closed", exposure_time, self._gain
+            if open_shutter else "closed", exposure_time, self._camera.get_control_value(asi.ASI_GAIN)
         )
 
         # do exposure
